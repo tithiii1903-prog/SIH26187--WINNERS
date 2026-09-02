@@ -4,8 +4,10 @@ FROM python:3.10-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8000
+ENV OMP_NUM_THREADS=1
+ENV MKL_NUM_THREADS=1
 
-# Install system dependencies required for OpenCV, PyTorch, InsightFace & ONNX
+# Install lightweight system dependencies required for OpenCV, InsightFace & ONNX
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libgl1 \
@@ -17,11 +19,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy and install python dependencies
+# Install lightweight CPU-only PyTorch (reduces RAM & disk overhead by ~70%)
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+# Install other requirements
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code and model weights
+# Copy application code and models
 COPY . .
 
 # Ensure runtime directories exist
@@ -29,5 +34,5 @@ RUN mkdir -p data/watchlist_photos data/watchlist_embeddings uploads config outp
 
 EXPOSE 8000
 
-# Start Uvicorn with support for cloud dynamic $PORT (e.g. Render / Railway / Cloud Run)
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Start Uvicorn with single worker and dynamic $PORT
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]
