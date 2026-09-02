@@ -1,13 +1,13 @@
 FROM python:3.10-slim
 
-# Prevent Python from writing .pyc files & enable unbuffered logging
+ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8000
 ENV OMP_NUM_THREADS=1
 ENV MKL_NUM_THREADS=1
 
-# Install lightweight system dependencies required for OpenCV, InsightFace & ONNX
+# Install lightweight system dependencies required for OpenCV & FFmpeg
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libgl1 \
@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     ffmpeg \
     curl \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

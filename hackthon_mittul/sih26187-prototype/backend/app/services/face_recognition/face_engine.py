@@ -82,7 +82,13 @@ class FaceEngine:
     ):
         self.det_size = det_size
         self.min_detection_confidence = min_detection_confidence
-        self._app = get_face_analysis_app(det_size=det_size)
+        self._app = None
+
+    @property
+    def app(self):
+        if self._app is None:
+            self._app = get_face_analysis_app(det_size=self.det_size)
+        return self._app
 
     def detect_and_extract(
         self, frame: np.ndarray
