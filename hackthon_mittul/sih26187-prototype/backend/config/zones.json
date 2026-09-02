@@ -1,0 +1,15 @@
+{
+  "zones": [
+    {
+      "id": "restricted-border-zone",
+      "name": "Restricted Border Zone",
+      "enabled": true,
+      "polygon": [
+        [475, 286],
+        [448, 458],
+        [807, 447],
+        [766, 302]
+      ]
+    }
+  ]
+}

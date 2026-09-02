@@ -1,0 +1,97 @@
+{
+  "feeds": {
+    "5f882ff4": {
+      "id": "5f882ff4",
+      "name": "a",
+      "source_type": "camera",
+      "device_index": 0,
+      "filename": "Device 0",
+      "filepath": "",
+      "width": 1920,
+      "height": 1080,
+      "fps": 15.0,
+      "frame_count": null,
+      "duration": null,
+      "status": "STOPPED"
+    },
+    "56b826c8": {
+      "id": "56b826c8",
+      "name": "test_camera",
+      "source_type": "camera",
+      "device_index": 0,
+      "filename": "Device 0",
+      "filepath": "",
+      "width": 1920,
+      "height": 1080,
+      "fps": 15.0,
+      "frame_count": null,
+      "duration": null,
+      "status": "STOPPED"
+    },
+    "d9c57eeb": {
+      "id": "d9c57eeb",
+      "name": "walk",
+      "source_type": "file",
+      "filename": "background_video___people___walking__.mp4",
+      "filepath": "uploads/background_video___people___walking__.mp4",
+      "width": 1280,
+      "height": 720,
+      "fps": 25.0,
+      "frame_count": 341,
+      "duration": 13.64,
+      "status": "STOPPED"
+    },
+    "2084834e": {
+      "id": "2084834e",
+      "name": "q",
+      "source_type": "file",
+      "filename": "road_sample.mp4",
+      "filepath": "uploads/road_sample.mp4",
+      "width": 1080,
+      "height": 1920,
+      "fps": 30.0,
+      "frame_count": 302,
+      "duration": 10.07,
+      "status": "STOPPED"
+    },
+    "a2dc4ed5": {
+      "id": "a2dc4ed5",
+      "name": "car",
+      "source_type": "file",
+      "filename": "14350696_3840_2160_60fps.mp4",
+      "filepath": "uploads\\14350696_3840_2160_60fps.mp4",
+      "width": 3840,
+      "height": 2160,
+      "fps": 59.94,
+      "frame_count": 2250,
+      "duration": 37.54,
+      "status": "STOPPED"
+    },
+    "219b8848": {
+      "id": "219b8848",
+      "name": "car 2",
+      "source_type": "file",
+      "filename": "13028263_1920_1080_60fps.mp4",
+      "filepath": "uploads\\13028263_1920_1080_60fps.mp4",
+      "width": 1920,
+      "height": 1080,
+      "fps": 59.94,
+      "frame_count": 711,
+      "duration": 11.86,
+      "status": "STOPPED"
+    },
+    "b341b0f6": {
+      "id": "b341b0f6",
+      "name": "car3",
+      "source_type": "file",
+      "filename": "13028263_1920_1080_60fps.mp4",
+      "filepath": "uploads\\13028263_1920_1080_60fps_1.mp4",
+      "width": 1920,
+      "height": 1080,
+      "fps": 59.94,
+      "frame_count": 711,
+      "duration": 11.86,
+      "status": "STOPPED"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: sih-command-backend
+    runtime: docker
+    rootDir: sih26187-prototype/backend
+    dockerfilePath: Dockerfile
+    plan: starter
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 8000
+    disk:
+      name: sih-data-storage
+      mountPath: /app/data
+      sizeGB: 5
