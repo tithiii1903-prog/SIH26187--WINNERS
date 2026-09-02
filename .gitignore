@@ -1,0 +1,37 @@
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+__MACOSX/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+*.log
+
+# Large Media Files
+*.mp4
+*.avi
+*.mkv
+*.mov
+**/uploads/*
+**/output/*
+!**/uploads/.gitkeep
+
+# Node & Frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Outputs / Scratch
+output/
+scratch/
