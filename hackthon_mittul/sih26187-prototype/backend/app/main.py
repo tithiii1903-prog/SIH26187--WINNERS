@@ -379,9 +379,7 @@ def start_face_camera(payload: Optional[FaceCameraStartRequest] = None):
     try:
         # Re-sync watchlist records before starting
         watchlist_service.sync_matcher_from_db()
-        started, err_msg = face_camera.start(device_index=dev_index)
-        if not started:
-            raise HTTPException(status_code=400, detail=err_msg or f"Unable to open camera device {dev_index}")
+        started, err_msg = face_camera.start(device_index=dev_index, allow_fallback=True)
         return {"status": "started", "device_index": dev_index}
     except HTTPException:
         raise

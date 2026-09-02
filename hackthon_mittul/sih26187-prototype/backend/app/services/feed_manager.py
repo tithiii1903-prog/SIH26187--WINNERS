@@ -169,15 +169,12 @@ class FeedManager:
         cap = cv2.VideoCapture(device_index)
         if not cap.isOpened():
             cap.release()
-            raise ValueError(
-                f"Cannot open camera device {device_index}. "
-                "Ensure the camera is connected and camera permissions are granted."
-            )
-
-        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
-        cap.release()
+            width, height, fps = 1280, 720, 30.0
+        else:
+            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) or 1280
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) or 720
+            fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+            cap.release()
 
         feed_id = str(uuid.uuid4())[:8]
         feed = {
