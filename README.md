@@ -82,7 +82,7 @@ Before running locally, ensure you have installed:
 
 #### 1. Backend Setup (Terminal 1)
 ```bash
-cd backend
+cd hackthon_mittul/sih26187-prototype/backend
 
 # Create & activate Python virtual environment
 python -m venv venv
@@ -104,7 +104,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 #### 2. Frontend Setup (Terminal 2)
 ```bash
-cd frontend
+cd hackthon_mittul/sih26187-prototype/frontend
 
 # Install dependencies
 npm install
