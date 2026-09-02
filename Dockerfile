@@ -24,7 +24,7 @@ WORKDIR /app
 RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
 # Copy requirements from backend path
-COPY hackthon_mittul/sih26187-prototype/backend/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
