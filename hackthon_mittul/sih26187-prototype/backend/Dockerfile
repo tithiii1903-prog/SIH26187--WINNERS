@@ -20,8 +20,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Upgrade pip, setuptools and wheel to support modern wheels
+# Upgrade pip, setuptools and wheel
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Pin numpy==1.26.4 FIRST to prevent NumPy 2.0 ONNX/ml_dtypes incompatibilities
+RUN pip install --no-cache-dir "numpy==1.26.4"
 
 # Install CPU PyTorch from official CPU wheel repository
 RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu

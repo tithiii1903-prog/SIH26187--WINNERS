@@ -5,8 +5,8 @@ python-multipart>=0.0.9
 pydantic>=2.6.0
 requests>=2.31.0
 
-# Computer Vision & Deep Learning (PyTorch installed via CPU index in Dockerfile)
-numpy>=1.24.0,<2.0.0
+# Pin NumPy to 1.26.4 to prevent NumPy 2.0 breaking changes with ONNX & ml_dtypes
+numpy==1.26.4
 opencv-python-headless>=4.8.0
 Pillow>=10.0.0
 ultralytics>=8.1.0
