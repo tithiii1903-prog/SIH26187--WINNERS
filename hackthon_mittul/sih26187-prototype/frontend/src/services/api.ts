@@ -1,4 +1,9 @@
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
+const rawUrl = import.meta.env.VITE_API_BASE_URL || "https://sih26187-winners-production.up.railway.app";
+let sanitizedUrl = rawUrl.replace(/\/+$/, "");
+if (typeof window !== "undefined" && window.location.protocol === "https:" && sanitizedUrl.startsWith("http://")) {
+  sanitizedUrl = sanitizedUrl.replace(/^http:\/\//, "https://");
+}
+export const API_BASE_URL = sanitizedUrl;
 
 // ============================================================
 // NEW LIVE FEED TYPES
