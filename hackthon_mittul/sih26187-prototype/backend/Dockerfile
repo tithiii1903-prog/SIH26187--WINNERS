@@ -20,11 +20,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy requirements first to break stale Docker build cache
-COPY requirements.txt .
+# Upgrade pip, setuptools and wheel to support modern wheels
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# Install PyTorch CPU and project requirements
+# Install CPU PyTorch from official CPU wheel repository
 RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+# Copy requirements and install remaining packages
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
