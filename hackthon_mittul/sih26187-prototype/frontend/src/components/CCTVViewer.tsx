@@ -40,7 +40,8 @@ const CCTVViewer: React.FC<CCTVViewerProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [useBrowserCam, setUseBrowserCam] = useState<boolean>(true);
+  const [useBrowserCam, setUseBrowserCam] = useState<boolean>(false);
+  const [camPermissionError, setCamPermissionError] = useState<boolean>(false);
 
   // Compute stream URL only when explicitly LIVE with valid session ID
   const streamUrl = feed && isLive && streamSessionId !== null
@@ -50,21 +51,31 @@ const CCTVViewer: React.FC<CCTVViewerProps> = ({
   const isBusy = status === 'STARTING' || status === 'STOPPING';
   const isMp4 = (feed?.source_type || 'file') === 'file';
 
+  const requestCameraAccess = async () => {
+    try {
+      setCamPermissionError(false);
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play().catch(() => {});
+      }
+      return stream;
+    } catch (err) {
+      console.warn("Browser camera access notice:", err);
+      setCamPermissionError(true);
+      return null;
+    }
+  };
+
   // Handle HTML5 WebCam & Push Frames to Backend
   useEffect(() => {
     let activeStream: MediaStream | null = null;
     let pushInterval: any = null;
 
     if (status === 'LIVE' && feed?.source_type === 'camera') {
-      navigator.mediaDevices?.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } })
-        .then((stream) => {
-          activeStream = stream;
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            videoRef.current.play().catch(() => {});
-          }
-
-          // Offscreen canvas for pushing JPEG frames to backend AI pipeline
+      requestCameraAccess().then((stream) => {
+        activeStream = stream;
+        if (stream) {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
 
@@ -82,13 +93,11 @@ const CCTVViewer: React.FC<CCTVViewerProps> = ({
                 }, 'image/jpeg', 0.7);
               }
             }
-          }, 150);
-        })
-        .catch((err) => {
-          console.warn("Browser camera access notice:", err);
-          setUseBrowserCam(false);
-        });
+          }, 120);
+        }
+      });
     }
+
     return () => {
       if (pushInterval) clearInterval(pushInterval);
       if (activeStream) {
@@ -191,26 +200,43 @@ const CCTVViewer: React.FC<CCTVViewerProps> = ({
           </div>
         )}
 
-        {/* State D: LIVE (MJPEG stream or Browser Local WebCam mounted) */}
+        {/* State D: LIVE (MJPEG stream & Background Browser WebCam capture) */}
         {status === 'LIVE' && (
           <>
-            {useBrowserCam ? (
-              <video
-                ref={videoRef}
-                className="cctv-stream"
-                autoPlay
-                playsInline
-                muted
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              />
-            ) : streamUrl ? (
+            <video
+              ref={videoRef}
+              className="cctv-stream"
+              autoPlay
+              playsInline
+              muted
+              style={{
+                display: useBrowserCam ? 'block' : 'none',
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain'
+              }}
+            />
+            {streamUrl && (
               <img
                 key={`stream-${feed?.id}-${streamSessionId}`}
                 src={streamUrl}
                 alt="Live CCTV AI Stream"
                 className="cctv-stream"
+                style={{
+                  display: !useBrowserCam ? 'block' : 'none',
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain'
+                }}
               />
-            ) : null}
+            )}
+            {feed?.source_type === 'camera' && camPermissionError && (
+              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
+                <button className="cctv-btn primary hero" onClick={requestCameraAccess}>
+                  📷 Enable Device Camera Access
+                </button>
+              </div>
+            )}
             {/* Real-time Telemetry Floating HUD */}
             <div className="cctv-live-telemetry-hud">
               <div className="hud-metric">

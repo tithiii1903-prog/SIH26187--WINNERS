@@ -18,25 +18,37 @@ const HDFaceViewer: React.FC<HDFaceViewerProps> = ({
   const [deviceIndex, setDeviceIndex] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [useBrowserCam, setUseBrowserCam] = useState<boolean>(true);
+  const [useBrowserCam, setUseBrowserCam] = useState<boolean>(false);
+  const [camPermissionError, setCamPermissionError] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const isRunning = status?.is_running || false;
   const streamUrl = isRunning ? getFaceCameraStreamUrl() : null;
+
+  const requestCameraAccess = async () => {
+    try {
+      setCamPermissionError(false);
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play().catch(() => {});
+      }
+      return stream;
+    } catch (err) {
+      console.warn("Browser camera access notice:", err);
+      setCamPermissionError(true);
+      return null;
+    }
+  };
 
   useEffect(() => {
     let activeStream: MediaStream | null = null;
     let pushInterval: any = null;
 
     if (isRunning) {
-      navigator.mediaDevices?.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } })
-        .then((stream) => {
-          activeStream = stream;
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            videoRef.current.play().catch(() => {});
-          }
-
+      requestCameraAccess().then((stream) => {
+        activeStream = stream;
+        if (stream) {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
 
@@ -54,13 +66,11 @@ const HDFaceViewer: React.FC<HDFaceViewerProps> = ({
                 }, 'image/jpeg', 0.7);
               }
             }
-          }, 150);
-        })
-        .catch((err) => {
-          console.warn("Browser camera access notice:", err);
-          setUseBrowserCam(false);
-        });
+          }, 120);
+        }
+      });
     }
+
     return () => {
       if (pushInterval) clearInterval(pushInterval);
       if (activeStream) {
@@ -200,22 +210,41 @@ const HDFaceViewer: React.FC<HDFaceViewerProps> = ({
       {/* Viewport Display */}
       <div className="hd-viewport-box">
         {isRunning ? (
-          useBrowserCam ? (
+          <>
             <video
               ref={videoRef}
               className="hd-stream-img"
               autoPlay
               playsInline
               muted
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              style={{
+                display: useBrowserCam ? 'block' : 'none',
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain'
+              }}
             />
-          ) : streamUrl ? (
-            <img
-              src={streamUrl}
-              alt="HD Face Recognition Live Stream"
-              className="hd-stream-img"
-            />
-          ) : null
+            {streamUrl && (
+              <img
+                src={streamUrl}
+                alt="HD Face Recognition Live Stream"
+                className="hd-stream-img"
+                style={{
+                  display: !useBrowserCam ? 'block' : 'none',
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain'
+                }}
+              />
+            )}
+            {camPermissionError && (
+              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
+                <button className="cctv-btn primary compact" onClick={requestCameraAccess}>
+                  📷 Enable Device Camera Access
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="hd-offline-placeholder">
             <div className="offline-icon">🎯</div>
