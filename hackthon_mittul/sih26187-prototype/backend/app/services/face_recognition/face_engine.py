@@ -43,9 +43,9 @@ def get_opencv_cascade():
 
 
 def get_face_analysis_app(
-    name: str = "buffalo_l",
+    name: str = "buffalo_sc",
     root: str = "data/insightface",
-    det_size: Tuple[int, int] = (640, 640),
+    det_size: Tuple[int, int] = (320, 320),
     providers: Optional[List[str]] = None
 ) -> Any:
     """
@@ -93,7 +93,7 @@ class FaceEngine:
 
     def __init__(
         self,
-        det_size: Tuple[int, int] = (640, 640),
+        det_size: Tuple[int, int] = (320, 320),
         min_detection_confidence: float = 0.50,
     ):
         self.det_size = det_size
