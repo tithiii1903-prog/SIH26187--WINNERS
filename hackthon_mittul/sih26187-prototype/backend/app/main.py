@@ -15,6 +15,7 @@ from fastapi.responses import StreamingResponse
 import json
 import os
 import time
+import threading
 
 import cv2
 import numpy as np
@@ -80,6 +81,17 @@ face_engine = FaceEngine()
 face_matcher = FaceMatcher()
 watchlist_service = WatchlistService(engine=face_engine, matcher=face_matcher)
 face_camera = FaceCamera(engine=face_engine, matcher=face_matcher)
+
+# Pre-warm FaceEngine models in background thread on backend boot to prevent enrollment HTTP timeouts
+def _prewarm_face_engine():
+    try:
+        print("[Startup] Pre-warming FaceEngine AI models...")
+        _ = face_engine.app
+        print("[Startup] FaceEngine AI models ready.")
+    except Exception as e:
+        print(f"[Startup] FaceEngine pre-warm notice: {e}")
+
+threading.Thread(target=_prewarm_face_engine, daemon=True, name="FaceEnginePrewarmThread").start()
 
 
 # ============================================================
