@@ -1,6 +1,6 @@
 # 🌐 IBVAP — Intelligent Border Video Analytics Platform (SIH26187)
 
-[![Live Web Application](https://img.shields.io/badge/Live_App-Vercel-000000?style=for-the-badge&logo=vercel)](https://frontend-q158y85zx-tithiii1903-progs-projects.vercel.app/)
+[![Live Web Application](https://img.shields.io/badge/Live_App-Vercel-000000?style=for-the-badge&logo=vercel)](https://frontend-lemon-mu-24.vercel.app/)
 [![Live Backend API](https://img.shields.io/badge/Backend_API-Railway-0B0D0E?style=for-the-badge&logo=railway)](https://sih26187-winners-production.up.railway.app/docs)
 [![Python](https://img.shields.io/badge/Python-3.10-blue?style=for-the-badge&logo=python)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110.0-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
@@ -11,7 +11,7 @@
 ## 📌 Live Demo Links
 
 * 🚀 **Live Production Application (Vercel)**:  
-  👉 **[https://frontend-q158y85zx-tithiii1903-progs-projects.vercel.app/](https://frontend-q158y85zx-tithiii1903-progs-projects.vercel.app/)**
+  👉 **[https://frontend-lemon-mu-24.vercel.app/](https://frontend-lemon-mu-24.vercel.app/)**
 
 * ⚡ **Live Backend API & Swagger Docs (Railway)**:  
   👉 **[https://sih26187-winners-production.up.railway.app/docs](https://sih26187-winners-production.up.railway.app/docs)**
