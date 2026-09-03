@@ -9,9 +9,9 @@ Provides:
 - Virtual fence management
 """
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 import json
 import os
 import time
@@ -65,6 +65,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def ensure_cors_and_catch_exceptions(request: Request, call_next):
+    if request.method == "OPTIONS":
+        res = Response(status_code=200)
+        res.headers["Access-Control-Allow-Origin"] = "*"
+        res.headers["Access-Control-Allow-Methods"] = "*"
+        res.headers["Access-Control-Allow-Headers"] = "*"
+        return res
+    try:
+        res = await call_next(request)
+        res.headers["Access-Control-Allow-Origin"] = "*"
+        return res
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"detail": str(e)},
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+
 # Ensure directories exist
 os.makedirs("output", exist_ok=True)
 os.makedirs("config", exist_ok=True)
@@ -108,9 +127,10 @@ def list_feeds():
 @app.post("/api/feeds")
 async def create_feed(
     file: UploadFile = File(...),
-    name: str = Form(...),
+    name: Optional[str] = Form(None),
 ):
     """Upload an MP4 and register as a new camera feed."""
+    feed_name = name.strip() if name and name.strip() else (file.filename or "Uploaded Feed")
     # Validate file type
     if not file.filename:
         raise HTTPException(status_code=400, detail="No filename provided")
@@ -159,7 +179,7 @@ async def create_feed(
 
     # Validate with OpenCV
     try:
-        feed = feed_manager.create_feed(name=name, filepath=filepath, filename=safe_filename)
+        feed = feed_manager.create_feed(name=feed_name, filepath=filepath, filename=safe_filename)
     except ValueError as e:
         os.remove(filepath)
         raise HTTPException(status_code=400, detail=str(e))
