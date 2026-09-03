@@ -117,7 +117,7 @@ export const uploadFeed = async (file: File, name: string): Promise<Feed> => {
   formData.append("file", file);
   formData.append("name", name);
 
-  const res = await fetch(`${API_BASE_URL}/api/feeds`, {
+  const res = await fetch(`${API_BASE_URL}/api/feeds/upload`, {
     method: "POST",
     body: formData,
   });

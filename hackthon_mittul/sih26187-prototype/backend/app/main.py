@@ -104,6 +104,7 @@ def list_feeds():
     return {"feeds": feed_manager.list_feeds()}
 
 
+@app.post("/api/feeds/upload")
 @app.post("/api/feeds")
 async def create_feed(
     file: UploadFile = File(...),
