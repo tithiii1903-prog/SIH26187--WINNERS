@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
-ENV PORT=8000
+ENV PORT=8080
 ENV OMP_NUM_THREADS=1
 ENV MKL_NUM_THREADS=1
 
@@ -40,7 +40,7 @@ COPY hackthon_mittul/sih26187-prototype/backend/ .
 # Ensure runtime directories exist
 RUN mkdir -p data/watchlist_photos data/watchlist_embeddings uploads config output
 
-EXPOSE 8000
+EXPOSE 8080
 
 # Start Uvicorn with single worker and dynamic $PORT
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --workers 1"]

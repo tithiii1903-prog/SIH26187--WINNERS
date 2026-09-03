@@ -40,7 +40,7 @@ const CCTVViewer: React.FC<CCTVViewerProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [useBrowserCam, setUseBrowserCam] = useState<boolean>(false);
+  const [useBrowserCam, setUseBrowserCam] = useState<boolean>(true);
   const [camPermissionError, setCamPermissionError] = useState<boolean>(false);
 
   // Compute stream URL only when explicitly LIVE with valid session ID

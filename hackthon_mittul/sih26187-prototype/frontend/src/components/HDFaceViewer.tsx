@@ -18,7 +18,7 @@ const HDFaceViewer: React.FC<HDFaceViewerProps> = ({
   const [deviceIndex, setDeviceIndex] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [useBrowserCam, setUseBrowserCam] = useState<boolean>(false);
+  const [useBrowserCam, setUseBrowserCam] = useState<boolean>(true);
   const [camPermissionError, setCamPermissionError] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
