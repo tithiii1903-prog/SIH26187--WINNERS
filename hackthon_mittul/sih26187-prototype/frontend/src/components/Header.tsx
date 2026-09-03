@@ -4,9 +4,10 @@ import type { Feed } from '../services/api';
 interface HeaderProps {
   activeFeed: Feed | null;
   isLive: boolean;
+  onEnableAllFeatures?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ activeFeed, isLive }) => {
+const Header: React.FC<HeaderProps> = ({ activeFeed, isLive, onEnableAllFeatures }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
 
   useEffect(() => {
@@ -56,8 +57,19 @@ const Header: React.FC<HeaderProps> = ({ activeFeed, isLive }) => {
         )}
       </div>
 
-      {/* Right Clock & Operator Telemetry */}
-      <div className="header-right-telemetry">
+      {/* Right Clock & Master Quick Action */}
+      <div className="header-right-telemetry" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        {onEnableAllFeatures && (
+          <button
+            className="cctv-btn primary hero compact"
+            onClick={onEnableAllFeatures}
+            title="Enable all AI modules, HD Face Recognition camera & start stream"
+            id="master-enable-all-btn"
+            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+          >
+            ⚡ ENABLE ALL FEATURES
+          </button>
+        )}
         <div className="header-clock-box">
           <span className="clock-label">SYSTEM CLOCK</span>
           <span className="clock-digits" id="header-system-clock">{currentTime || '00:00:00'}</span>

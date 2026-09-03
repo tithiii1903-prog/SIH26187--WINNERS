@@ -60,6 +60,15 @@ class VideoSource(abc.ABC):
     def fps(self) -> float:
         return 30.0
 
+    def get_fps(self) -> float:
+        return self.fps
+
+    def release(self) -> None:
+        self.close()
+
+    def is_live(self) -> bool:
+        return isinstance(self, CameraVideoSource)
+
     @property
     def width(self) -> int:
         return 1280
@@ -161,8 +170,21 @@ class CameraVideoSource(VideoSource):
         self._angle: float = 0.0
 
     def open(self) -> bool:
-        cap = cv2.VideoCapture(self.device_index)
-        if not cap.isOpened():
+        backends = [cv2.CAP_DSHOW, cv2.CAP_MSMF, cv2.CAP_ANY] if os.name == 'nt' else [cv2.CAP_ANY]
+        cap = None
+        for backend in backends:
+            try:
+                temp_cap = cv2.VideoCapture(self.device_index, backend)
+                if temp_cap.isOpened():
+                    ret, frame = temp_cap.read()
+                    if ret and frame is not None and frame.size > 0:
+                        cap = temp_cap
+                        break
+                    temp_cap.release()
+            except Exception:
+                pass
+
+        if cap is None or not cap.isOpened():
             print(f"[CameraVideoSource] Device {self.device_index} unavailable. Enabling Live Cloud Feed.")
             self._cap = None
             self._use_synthetic = True
@@ -172,6 +194,7 @@ class CameraVideoSource(VideoSource):
             self._width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) or 1280
             self._height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) or 720
             self._fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+            print(f"[CameraVideoSource] Successfully opened physical camera device {self.device_index} ({self._width}x{self._height} @ {self._fps} FPS)")
         return True
 
     def read_frame(self) -> Tuple[bool, Optional[np.ndarray]]:

@@ -1,4 +1,17 @@
-const rawUrl = import.meta.env.VITE_API_BASE_URL || "https://sih26187-winners-production.up.railway.app";
+const getInitialApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1" || host === "") {
+      return "http://127.0.0.1:8000";
+    }
+  }
+  return "https://sih26187-winners-production.up.railway.app";
+};
+
+const rawUrl = getInitialApiBaseUrl();
 let sanitizedUrl = rawUrl.replace(/\/+$/, "");
 if (typeof window !== "undefined" && window.location.protocol === "https:" && sanitizedUrl.startsWith("http://")) {
   sanitizedUrl = sanitizedUrl.replace(/^http:\/\//, "https://");

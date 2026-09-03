@@ -166,9 +166,21 @@ class FeedManager:
         The camera is released immediately after probing — it will be
         re-opened when the feed is started.
         """
-        cap = cv2.VideoCapture(device_index)
-        if not cap.isOpened():
-            cap.release()
+        backends = [cv2.CAP_DSHOW, cv2.CAP_MSMF, cv2.CAP_ANY] if os.name == 'nt' else [cv2.CAP_ANY]
+        cap = None
+        for backend in backends:
+            try:
+                temp_cap = cv2.VideoCapture(device_index, backend)
+                if temp_cap.isOpened():
+                    ret, frame = temp_cap.read()
+                    if ret and frame is not None and frame.size > 0:
+                        cap = temp_cap
+                        break
+                    temp_cap.release()
+            except Exception:
+                pass
+
+        if cap is None or not cap.isOpened():
             width, height, fps = 1280, 720, 30.0
         else:
             width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) or 1280

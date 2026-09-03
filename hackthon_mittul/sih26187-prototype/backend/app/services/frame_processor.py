@@ -307,7 +307,10 @@ class FrameProcessor:
             self._ai_thread.join(timeout=3.0)
         self._ai_thread = None
 
-        self.video_source.release()
+        if hasattr(self.video_source, "close"):
+            self.video_source.close()
+        elif hasattr(self.video_source, "release"):
+            self.video_source.release()
 
         with self._ai_buffer_lock:
             self._pending_ai_frame = None
@@ -543,7 +546,7 @@ class FrameProcessor:
                     self._error_message = "Failed to open video source"
                 return
 
-            source_fps = self.video_source.get_fps()
+            source_fps = self.video_source.fps if hasattr(self.video_source, "fps") else self.video_source.get_fps()
             frame_interval = 1.0 / source_fps if source_fps > 0 else 1.0 / 30.0
 
             with self._state_lock:
@@ -770,7 +773,10 @@ class FrameProcessor:
             traceback.print_exc()
 
         finally:
-            self.video_source.release()
+            if hasattr(self.video_source, "close"):
+                self.video_source.close()
+            elif hasattr(self.video_source, "release"):
+                self.video_source.release()
             self._stop_event.set()
             self._ai_frame_event.set()
             self._frame_ready.set()

@@ -26,6 +26,22 @@ const ModuleControls: React.FC<ModuleControlsProps> = ({
     }
   };
 
+  const handleEnableAll = async () => {
+    if (!feedId || !isLive) return;
+
+    try {
+      await updateModules(feedId, {
+        human_detection: true,
+        human_tracking: true,
+        vehicle_detection: true,
+        virtual_fence: true,
+      });
+      onModulesChanged();
+    } catch (e) {
+      console.error('Failed to enable all AI modules:', e);
+    }
+  };
+
   const moduleItems: { key: keyof ModuleConfig; label: string; icon: string; desc: string }[] = [
     {
       key: 'human_detection',
@@ -55,12 +71,24 @@ const ModuleControls: React.FC<ModuleControlsProps> = ({
 
   return (
     <div className="panel command-panel" id="ai-module-controls-panel">
-      <div className="panel-header">
+      <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span className="panel-title">AI PIPELINE MODULES</span>
-        <span className={`status-indicator ${isLive ? 'success' : 'neutral'}`}>
-          <span className="status-dot" />
-          {isLive ? 'ACTIVE PIPELINE' : 'STANDBY'}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {isLive && (
+            <button
+              className="cctv-btn primary compact"
+              onClick={handleEnableAll}
+              title="Engage all 4 AI pipeline modules"
+              id="enable-all-modules-btn"
+            >
+              ⚡ ENABLE ALL
+            </button>
+          )}
+          <span className={`status-indicator ${isLive ? 'success' : 'neutral'}`}>
+            <span className="status-dot" />
+            {isLive ? 'ACTIVE PIPELINE' : 'STANDBY'}
+          </span>
+        </div>
       </div>
 
       <div className="module-list">

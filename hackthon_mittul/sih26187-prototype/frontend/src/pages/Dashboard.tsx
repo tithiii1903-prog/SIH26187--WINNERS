@@ -17,6 +17,7 @@ import {
   fetchFeedEvents,
   startFeed,
   stopFeed,
+  updateModules,
   fetchZones,
   fetchAcknowledgedEvents,
   fetchWatchlist,
@@ -374,6 +375,41 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Master Enable All Features Handler
+  const handleEnableAllFeatures = async () => {
+    try {
+      let currentFeedId = selectedFeedId;
+      if (!currentFeedId && feeds.length > 0) {
+        currentFeedId = feeds[0].id;
+        setSelectedFeedId(currentFeedId);
+      }
+
+      if (currentFeedId && playerStatus !== 'LIVE') {
+        await startFeed(currentFeedId);
+        setStreamSessionId(Date.now());
+        setPlayerStatus('LIVE');
+      }
+
+      if (currentFeedId) {
+        await updateModules(currentFeedId, {
+          human_detection: true,
+          human_tracking: true,
+          vehicle_detection: true,
+          virtual_fence: true,
+        });
+      }
+
+      if (!faceCameraStatus?.is_running) {
+        await startFaceCamera(0);
+      }
+
+      await loadFeeds();
+      await loadFaceStatus();
+    } catch (err: any) {
+      console.error('Failed to enable all features:', err);
+    }
+  };
+
   // Acknowledgement Handler
   const handleAcknowledge = (eventId: string) => {
     setAcknowledgedEvents(prev => new Set([...prev, eventId]));
@@ -392,7 +428,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="dashboard-container command-center-layout">
       {/* Top Command Center Header */}
-      <Header activeFeed={selectedFeed} isLive={isLive} />
+      <Header activeFeed={selectedFeed} isLive={isLive} onEnableAllFeatures={handleEnableAllFeatures} />
 
       {/* Main Command Room Workspace */}
       <main className="command-center-workspace">

@@ -3,6 +3,7 @@ HD Face Camera Service — Decoupled Continuous Capture & Non-Blocking Recogniti
 with Cloud Server Synthetic HD Stream Fallback.
 """
 
+import os
 import time
 import threading
 from collections import deque
@@ -131,10 +132,23 @@ class FaceCamera:
         if self._is_running:
             return True, None
 
-        # Attempt to open physical hardware camera
-        cap = cv2.VideoCapture(self.device_index)
-        if not cap.isOpened():
-            print(f"[FaceCamera] Physical camera device {self.device_index} not present (Cloud deployment). Using Live Cloud Camera Feed.")
+        # Attempt to open physical hardware camera with multi-backend fallbacks
+        backends = [cv2.CAP_DSHOW, cv2.CAP_MSMF, cv2.CAP_ANY] if os.name == 'nt' else [cv2.CAP_ANY]
+        cap = None
+        for backend in backends:
+            try:
+                temp_cap = cv2.VideoCapture(self.device_index, backend)
+                if temp_cap.isOpened():
+                    ret, frame = temp_cap.read()
+                    if ret and frame is not None and frame.size > 0:
+                        cap = temp_cap
+                        break
+                    temp_cap.release()
+            except Exception:
+                pass
+
+        if cap is None or not cap.isOpened():
+            print(f"[FaceCamera] Physical camera device {self.device_index} not present. Using Live Cloud Camera Feed.")
             self._cap = None
             self._use_synthetic_camera = True
         else:
