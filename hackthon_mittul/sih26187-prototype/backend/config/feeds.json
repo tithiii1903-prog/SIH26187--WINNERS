@@ -92,6 +92,20 @@
       "frame_count": 711,
       "duration": 11.86,
       "status": "STOPPED"
+    },
+    "3c8119be": {
+      "id": "3c8119be",
+      "name": "test_cam",
+      "source_type": "camera",
+      "device_index": 0,
+      "filename": "Device 0",
+      "filepath": "",
+      "width": 1280,
+      "height": 720,
+      "fps": -1.0,
+      "frame_count": null,
+      "duration": null,
+      "status": "STOPPED"
     }
   }
 }
