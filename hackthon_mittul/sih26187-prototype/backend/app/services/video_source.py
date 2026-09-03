@@ -101,8 +101,25 @@ class FileVideoSource(VideoSource):
         self._angle: float = 0.0
 
     def open(self) -> bool:
-        if self.filepath and os.path.exists(self.filepath):
-            self._cap = cv2.VideoCapture(self.filepath)
+        clean_path = self.filepath.replace("\\", "/") if self.filepath else ""
+        filename = os.path.basename(clean_path) if clean_path else ""
+
+        candidates = [
+            clean_path,
+            os.path.join("sample_videos", filename) if filename else "",
+            os.path.join("uploads", filename) if filename else "",
+            os.path.join("..", filename) if filename else "",
+            os.path.join("..", "..", filename) if filename else "",
+        ]
+
+        found_path = None
+        for candidate in candidates:
+            if candidate and os.path.exists(candidate) and not os.path.isdir(candidate):
+                found_path = candidate
+                break
+
+        if found_path:
+            self._cap = cv2.VideoCapture(found_path)
             if self._cap.isOpened():
                 self._use_synthetic = False
                 self._width = int(self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)) or 1280
@@ -110,6 +127,7 @@ class FileVideoSource(VideoSource):
                 self._fps = self._cap.get(cv2.CAP_PROP_FPS) or 30.0
                 self._frame_count = int(self._cap.get(cv2.CAP_PROP_FRAME_COUNT))
                 self._duration = self._frame_count / self._fps if self._fps > 0 else 30.0
+                print(f"[FileVideoSource] Successfully opened video file '{found_path}' ({self._width}x{self._height} @ {self._fps} FPS)")
                 return True
 
         print(f"[FileVideoSource] File '{self.filepath}' not found on server. Using Cloud Surveillance Stream.")

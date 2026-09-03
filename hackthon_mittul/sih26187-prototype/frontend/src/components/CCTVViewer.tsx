@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { getMjpegStreamUrl } from '../services/api';
 import type { Feed, Zone, LiveAnalytics } from '../services/api';
 import FenceEditor from './FenceEditor';
@@ -39,6 +39,8 @@ const CCTVViewer: React.FC<CCTVViewerProps> = ({
   errorMessage,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [useBrowserCam, setUseBrowserCam] = useState<boolean>(false);
 
   // Compute stream URL only when explicitly LIVE with valid session ID
   const streamUrl = feed && isLive && streamSessionId !== null
@@ -47,6 +49,30 @@ const CCTVViewer: React.FC<CCTVViewerProps> = ({
 
   const isBusy = status === 'STARTING' || status === 'STOPPING';
   const isMp4 = (feed?.source_type || 'file') === 'file';
+
+  // Handle HTML5 WebCam fallback for cloud deployments (Vercel)
+  useEffect(() => {
+    let activeStream: MediaStream | null = null;
+    if (status === 'LIVE' && feed?.source_type === 'camera' && useBrowserCam) {
+      navigator.mediaDevices?.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } })
+        .then((stream) => {
+          activeStream = stream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play().catch(() => {});
+          }
+        })
+        .catch((err) => {
+          console.error("Browser camera permission denied or unavailable:", err);
+          setUseBrowserCam(false);
+        });
+    }
+    return () => {
+      if (activeStream) {
+        activeStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [status, feed?.id, feed?.source_type, useBrowserCam]);
 
   return (
     <div className="cctv-command-viewport-card">
@@ -61,7 +87,18 @@ const CCTVViewer: React.FC<CCTVViewerProps> = ({
           )}
         </div>
 
-        <div className="cctv-header-right">
+        <div className="cctv-header-right" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {feed?.source_type === 'camera' && status === 'LIVE' && (
+            <button
+              className={`cctv-btn compact ${useBrowserCam ? 'primary' : ''}`}
+              onClick={() => setUseBrowserCam(!useBrowserCam)}
+              title="Toggle client browser device camera"
+              style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
+            >
+              {useBrowserCam ? '📷 Browser WebCam: ON' : '📷 Use Device WebCam'}
+            </button>
+          )}
+
           {feed && (
             <span className="cctv-source-type-badge">
               {feed.source_type === 'camera'
@@ -131,15 +168,26 @@ const CCTVViewer: React.FC<CCTVViewerProps> = ({
           </div>
         )}
 
-        {/* State D: LIVE (MJPEG stream mounted) */}
-        {status === 'LIVE' && streamUrl && (
+        {/* State D: LIVE (MJPEG stream or Browser Local WebCam mounted) */}
+        {status === 'LIVE' && (
           <>
-            <img
-              key={`stream-${feed?.id}-${streamSessionId}`}
-              src={streamUrl}
-              alt="Live CCTV AI Stream"
-              className="cctv-stream"
-            />
+            {useBrowserCam ? (
+              <video
+                ref={videoRef}
+                className="cctv-stream"
+                autoPlay
+                playsInline
+                muted
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
+            ) : streamUrl ? (
+              <img
+                key={`stream-${feed?.id}-${streamSessionId}`}
+                src={streamUrl}
+                alt="Live CCTV AI Stream"
+                className="cctv-stream"
+              />
+            ) : null}
             {/* Real-time Telemetry Floating HUD */}
             <div className="cctv-live-telemetry-hud">
               <div className="hud-metric">

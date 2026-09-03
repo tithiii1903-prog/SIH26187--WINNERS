@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { getFaceCameraStreamUrl } from '../services/api';
 import type { FaceCameraStatus, FaceCameraResults } from '../services/api';
 
@@ -18,9 +18,34 @@ const HDFaceViewer: React.FC<HDFaceViewerProps> = ({
   const [deviceIndex, setDeviceIndex] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [useBrowserCam, setUseBrowserCam] = useState<boolean>(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const isRunning = status?.is_running || false;
   const streamUrl = isRunning ? getFaceCameraStreamUrl() : null;
+
+  useEffect(() => {
+    let activeStream: MediaStream | null = null;
+    if (isRunning && useBrowserCam) {
+      navigator.mediaDevices?.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } })
+        .then((stream) => {
+          activeStream = stream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play().catch(() => {});
+          }
+        })
+        .catch((err) => {
+          console.error("Browser camera error:", err);
+          setUseBrowserCam(false);
+        });
+    }
+    return () => {
+      if (activeStream) {
+        activeStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [isRunning, useBrowserCam]);
 
   const handleStart = async () => {
     setLoading(true);
@@ -89,15 +114,25 @@ const HDFaceViewer: React.FC<HDFaceViewerProps> = ({
               </button>
             </div>
           ) : (
-            <button
-              className="cctv-btn danger compact"
-              onClick={handleStop}
-              disabled={loading}
-              id="hd-camera-stop-btn"
-            >
-              <span className="btn-icon">■</span>
-              <span>{loading ? 'Stopping...' : 'Stop HD'}</span>
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <button
+                className={`cctv-btn compact ${useBrowserCam ? 'primary' : ''}`}
+                onClick={() => setUseBrowserCam(!useBrowserCam)}
+                title="Toggle client browser webcam"
+                style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
+              >
+                {useBrowserCam ? '📷 WebCam: ON' : '📷 WebCam'}
+              </button>
+              <button
+                className="cctv-btn danger compact"
+                onClick={handleStop}
+                disabled={loading}
+                id="hd-camera-stop-btn"
+              >
+                <span className="btn-icon">■</span>
+                <span>{loading ? 'Stopping...' : 'Stop HD'}</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -142,12 +177,23 @@ const HDFaceViewer: React.FC<HDFaceViewerProps> = ({
 
       {/* Viewport Display */}
       <div className="hd-viewport-box">
-        {isRunning && streamUrl ? (
-          <img
-            src={streamUrl}
-            alt="HD Face Recognition Live Stream"
-            className="hd-stream-img"
-          />
+        {isRunning ? (
+          useBrowserCam ? (
+            <video
+              ref={videoRef}
+              className="hd-stream-img"
+              autoPlay
+              playsInline
+              muted
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            />
+          ) : streamUrl ? (
+            <img
+              src={streamUrl}
+              alt="HD Face Recognition Live Stream"
+              className="hd-stream-img"
+            />
+          ) : null
         ) : (
           <div className="hd-offline-placeholder">
             <div className="offline-icon">🎯</div>
