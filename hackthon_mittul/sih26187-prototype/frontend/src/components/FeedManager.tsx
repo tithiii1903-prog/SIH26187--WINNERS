@@ -88,6 +88,22 @@ const FeedManager: React.FC<FeedManagerProps> = ({
     }
   };
 
+  const handleQuickAddCamera = async () => {
+    setRegisteringCamera(true);
+    setError(null);
+    try {
+      const feed = await createCameraFeed("My WebCam Device", 0);
+      onFeedsChanged();
+      if (feed && feed.id) {
+        onSelectFeed(feed.id);
+      }
+    } catch (e: any) {
+      setError(e.message || 'Failed to connect device camera');
+    } finally {
+      setRegisteringCamera(false);
+    }
+  };
+
   return (
     <div className="panel command-panel" id="surveillance-sources-panel">
       <div className="panel-header">
@@ -139,20 +155,22 @@ const FeedManager: React.FC<FeedManagerProps> = ({
             placeholder="Feed Name (e.g. BORDER-WEST-CAM-01)"
             value={feedName}
             onChange={(e) => setFeedName(e.target.value)}
-            className="cctv-input"
+            disabled={uploading}
+            className="source-input"
           />
           <input
-            ref={fileInputRef}
             type="file"
-            accept="video/mp4,video/avi,video/mov,.mp4,.avi,.mov,.mkv"
-            className="cctv-file-input"
+            accept="video/mp4,video/x-m4v,video/*"
+            ref={fileInputRef}
+            disabled={uploading}
+            className="source-file-input"
           />
           <button
-            className="cctv-btn primary hero"
+            className="cctv-btn success compact full-width"
             onClick={handleUpload}
             disabled={uploading}
           >
-            <span>{uploading ? 'Processing Video Header...' : 'Upload & Register'}</span>
+            {uploading ? 'Uploading Video...' : 'Upload Feed'}
           </button>
         </div>
       )}
@@ -162,28 +180,30 @@ const FeedManager: React.FC<FeedManagerProps> = ({
         <div className="source-form-card">
           <input
             type="text"
-            placeholder="Camera Name (e.g. GATE-NORTH-LIVE)"
+            placeholder="Camera Name (e.g. PERIMETER-GATE-01)"
             value={cameraName}
             onChange={(e) => setCameraName(e.target.value)}
-            className="cctv-input"
+            disabled={registeringCamera}
+            className="source-input"
           />
-          <div className="device-index-row">
-            <label className="dev-idx-label">Device Index:</label>
+          <label className="source-dev-label">
+            Device Index:
             <input
               type="number"
-              min={0}
-              max={10}
+              min="0"
+              max="10"
               value={deviceIndex}
               onChange={(e) => setDeviceIndex(parseInt(e.target.value) || 0)}
-              className="cctv-input compact-num"
+              disabled={registeringCamera}
+              className="source-dev-input"
             />
-          </div>
+          </label>
           <button
-            className="cctv-btn primary hero"
+            className="cctv-btn success compact full-width"
             onClick={handleAddCamera}
             disabled={registeringCamera}
           >
-            <span>{registeringCamera ? 'Probing Device Port...' : 'Register Device'}</span>
+            {registeringCamera ? 'Connecting Device...' : 'Connect Camera'}
           </button>
         </div>
       )}
@@ -197,8 +217,18 @@ const FeedManager: React.FC<FeedManagerProps> = ({
       {/* Feed List */}
       <div className="scrollable-list source-list-deck">
         {displayedFeeds.length === 0 ? (
-          <div className="empty-state-banner">
-            <span>{activeTab === 'recorded' ? 'No recorded feeds registered. Upload an MP4 video.' : 'No device cameras registered. Click Register Device.'}</span>
+          <div className="empty-state-banner" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
+            <span>{activeTab === 'recorded' ? 'No recorded feeds registered. Upload an MP4 video.' : 'No device cameras registered yet.'}</span>
+            {activeTab === 'camera' && (
+              <button
+                className="cctv-btn primary compact"
+                onClick={handleQuickAddCamera}
+                disabled={registeringCamera}
+                style={{ marginTop: '0.2rem' }}
+              >
+                📷 Quick Connect My WebCam
+              </button>
+            )}
           </div>
         ) : (
           displayedFeeds.map((f) => {
