@@ -205,11 +205,33 @@ class FaceCamera:
         self.state_tracker.reset()
         print("[FaceCamera] Stopped FaceCamera service cleanly")
 
+    def push_frame(self, frame: np.ndarray):
+        now = time.time()
+        self._source_timestamps.append(now)
+        self._measured_source_fps = _calc_measured_fps(self._source_timestamps)
+        self._frame_width = frame.shape[1]
+        self._frame_height = frame.shape[0]
+
+        with self._capture_lock:
+            self._latest_preview_frame = frame.copy()
+            self._use_synthetic_camera = False
+
+        with self._rec_slot_lock:
+            self._pending_rec_frame = frame.copy()
+            self._pending_rec_timestamp = now
+
+        self._new_frame_event.set()
+
     def _capture_worker_loop(self):
         """Continuously captures frames from hardware camera or generates synthetic cloud frames at ~30 FPS."""
         angle = 0.0
         while not self._stop_event.is_set():
             if self._use_synthetic_camera or self._cap is None or not self._cap.isOpened():
+                with self._capture_lock:
+                    has_recent_pushed = self._latest_preview_frame is not None and not self._use_synthetic_camera
+                if has_recent_pushed:
+                    time.sleep(1.0 / 30.0)
+                    continue
                 frame = _generate_synthetic_hd_frame(angle)
                 angle += 0.05
                 time.sleep(1.0 / 30.0)

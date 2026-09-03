@@ -17,6 +17,7 @@ import os
 import time
 
 import cv2
+import numpy as np
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 
@@ -407,6 +408,42 @@ def get_face_camera_status():
 def get_face_camera_results():
     """Gets latest face recognition detections snapshot."""
     return face_camera.get_latest_results()
+
+
+@app.post("/api/face-camera/frame")
+async def push_face_camera_frame(file: UploadFile = File(...)):
+    """Receives live camera JPEG frame pushed from browser client to HD Face Camera."""
+    if not face_camera.is_running():
+        raise HTTPException(status_code=400, detail="HD Face Camera is not currently active")
+    try:
+        contents = await file.read()
+        nparr = np.frombuffer(contents, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if img is not None:
+            face_camera.push_frame(img)
+            return {"status": "success"}
+        raise HTTPException(status_code=400, detail="Invalid image frame")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/feeds/{feed_id}/frame")
+async def push_feed_frame(feed_id: str, file: UploadFile = File(...)):
+    """Receives live camera JPEG frame pushed from browser client to Primary Feed."""
+    processor = feed_manager.get_active_processor()
+    if processor is None or feed_manager.get_active_feed_id() != feed_id:
+        raise HTTPException(status_code=400, detail="Feed is not currently active")
+    try:
+        contents = await file.read()
+        nparr = np.frombuffer(contents, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if img is not None:
+            if hasattr(processor.video_source, "push_frame"):
+                processor.video_source.push_frame(img)
+            return {"status": "success"}
+        raise HTTPException(status_code=400, detail="Invalid image frame")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/face-camera/stream")

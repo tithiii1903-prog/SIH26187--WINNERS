@@ -402,4 +402,22 @@ export const getFaceCameraStreamUrl = (): string => {
   return `${API_BASE_URL}/api/face-camera/stream`;
 };
 
+export const pushFeedFrame = async (feedId: string, blob: Blob): Promise<void> => {
+  const formData = new FormData();
+  formData.append("file", blob, "frame.jpg");
+  await fetch(`${API_BASE_URL}/api/feeds/${feedId}/frame`, {
+    method: "POST",
+    body: formData,
+  }).catch(() => {});
+};
+
+export const pushFaceCameraFrame = async (blob: Blob): Promise<void> => {
+  const formData = new FormData();
+  formData.append("file", blob, "frame.jpg");
+  await fetch(`${API_BASE_URL}/api/face-camera/frame`, {
+    method: "POST",
+    body: formData,
+  }).catch(() => {});
+};
+
 

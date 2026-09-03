@@ -186,6 +186,17 @@ class CameraVideoSource(VideoSource):
         self._height: int = 720
         self._fps: float = 30.0
         self._angle: float = 0.0
+        self._pushed_frame: Optional[np.ndarray] = None
+        self._last_pushed_time: float = 0.0
+        self._lock = threading.Lock()
+
+    def push_frame(self, frame: np.ndarray):
+        with self._lock:
+            self._pushed_frame = frame.copy()
+            self._last_pushed_time = time.time()
+            self._use_synthetic = False
+            self._width = frame.shape[1]
+            self._height = frame.shape[0]
 
     def open(self) -> bool:
         backends = [cv2.CAP_DSHOW, cv2.CAP_MSMF, cv2.CAP_ANY] if os.name == 'nt' else [cv2.CAP_ANY]
@@ -216,6 +227,10 @@ class CameraVideoSource(VideoSource):
         return True
 
     def read_frame(self) -> Tuple[bool, Optional[np.ndarray]]:
+        with self._lock:
+            if self._pushed_frame is not None and time.time() - self._last_pushed_time < 2.0:
+                return True, self._pushed_frame.copy()
+
         if self._use_synthetic or self._cap is None or not self._cap.isOpened():
             frame = _generate_synthetic_video_frame(self._angle)
             self._angle += 0.05

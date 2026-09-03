@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { getFaceCameraStreamUrl } from '../services/api';
+import { getFaceCameraStreamUrl, pushFaceCameraFrame } from '../services/api';
 import type { FaceCameraStatus, FaceCameraResults } from '../services/api';
 
 interface HDFaceViewerProps {
@@ -18,7 +18,7 @@ const HDFaceViewer: React.FC<HDFaceViewerProps> = ({
   const [deviceIndex, setDeviceIndex] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [useBrowserCam, setUseBrowserCam] = useState<boolean>(false);
+  const [useBrowserCam, setUseBrowserCam] = useState<boolean>(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const isRunning = status?.is_running || false;
@@ -26,7 +26,9 @@ const HDFaceViewer: React.FC<HDFaceViewerProps> = ({
 
   useEffect(() => {
     let activeStream: MediaStream | null = null;
-    if (isRunning && useBrowserCam) {
+    let pushInterval: any = null;
+
+    if (isRunning) {
       navigator.mediaDevices?.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } })
         .then((stream) => {
           activeStream = stream;
@@ -34,18 +36,38 @@ const HDFaceViewer: React.FC<HDFaceViewerProps> = ({
             videoRef.current.srcObject = stream;
             videoRef.current.play().catch(() => {});
           }
+
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+
+          pushInterval = setInterval(() => {
+            if (videoRef.current && ctx) {
+              const video = videoRef.current;
+              if (video.videoWidth > 0 && video.videoHeight > 0) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob((blob) => {
+                  if (blob) {
+                    pushFaceCameraFrame(blob);
+                  }
+                }, 'image/jpeg', 0.7);
+              }
+            }
+          }, 150);
         })
         .catch((err) => {
-          console.error("Browser camera error:", err);
+          console.warn("Browser camera access notice:", err);
           setUseBrowserCam(false);
         });
     }
     return () => {
+      if (pushInterval) clearInterval(pushInterval);
       if (activeStream) {
         activeStream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [isRunning, useBrowserCam]);
+  }, [isRunning]);
 
   const handleStart = async () => {
     setLoading(true);
