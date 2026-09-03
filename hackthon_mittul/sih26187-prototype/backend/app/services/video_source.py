@@ -200,6 +200,13 @@ class CameraVideoSource(VideoSource):
             self._height = frame.shape[0]
 
     def open(self) -> bool:
+        # Check if hardware video device exists on Linux before calling OpenCV to prevent V4L2 stderr logs
+        if os.name != 'nt' and not os.path.exists(f"/dev/video{self.device_index}"):
+            print(f"[CameraVideoSource] Cloud container without /dev/video{self.device_index}. Enabling Live Cloud Feed.")
+            self._cap = None
+            self._use_synthetic = True
+            return True
+
         backends = [cv2.CAP_DSHOW, cv2.CAP_MSMF, cv2.CAP_ANY] if os.name == 'nt' else [cv2.CAP_ANY]
         cap = None
         for backend in backends:

@@ -133,19 +133,23 @@ class FaceCamera:
             return True, None
 
         # Attempt to open physical hardware camera with multi-backend fallbacks
-        backends = [cv2.CAP_DSHOW, cv2.CAP_MSMF, cv2.CAP_ANY] if os.name == 'nt' else [cv2.CAP_ANY]
-        cap = None
-        for backend in backends:
-            try:
-                temp_cap = cv2.VideoCapture(self.device_index, backend)
-                if temp_cap.isOpened():
-                    ret, frame = temp_cap.read()
-                    if ret and frame is not None and frame.size > 0:
-                        cap = temp_cap
-                        break
-                    temp_cap.release()
-            except Exception:
-                pass
+        if os.name != 'nt' and not os.path.exists(f"/dev/video{self.device_index}"):
+            print(f"[FaceCamera] Physical camera device {self.device_index} not present on Linux. Using Live Cloud Camera Feed.")
+            cap = None
+        else:
+            backends = [cv2.CAP_DSHOW, cv2.CAP_MSMF, cv2.CAP_ANY] if os.name == 'nt' else [cv2.CAP_ANY]
+            cap = None
+            for backend in backends:
+                try:
+                    temp_cap = cv2.VideoCapture(self.device_index, backend)
+                    if temp_cap.isOpened():
+                        ret, frame = temp_cap.read()
+                        if ret and frame is not None and frame.size > 0:
+                            cap = temp_cap
+                            break
+                        temp_cap.release()
+                except Exception:
+                    pass
 
         if cap is None or not cap.isOpened():
             print(f"[FaceCamera] Physical camera device {self.device_index} not present. Using Live Cloud Camera Feed.")
