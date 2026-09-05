@@ -104,8 +104,11 @@ face_camera = FaceCamera(engine=face_engine, matcher=face_matcher)
 # Pre-warm FaceEngine models in background thread on backend boot to prevent enrollment HTTP timeouts
 def _prewarm_face_engine():
     try:
+        time.sleep(5)
         print("[Startup] Pre-warming FaceEngine AI models...")
         _ = face_engine.app
+        import gc
+        gc.collect()
         print("[Startup] FaceEngine AI models ready.")
     except Exception as e:
         print(f"[Startup] FaceEngine pre-warm notice: {e}")
